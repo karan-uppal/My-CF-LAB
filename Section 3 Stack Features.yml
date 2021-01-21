@@ -1,4 +1,8 @@
-oeoe: brrrraaa
-mjeee: aa gye
-kkk
-singed off stagemmmm
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+Resources:
+  MyEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: "ami-0a0ad6b70e61be944"
+      InstanceType: t2.micro
