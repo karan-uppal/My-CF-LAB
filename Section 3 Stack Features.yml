@@ -6,3 +6,4 @@ Resources:
     Properties: 
       ImageId: "ami-0a0ad6b70e61be944"
       InstanceType: t2.micro
+      KeyName: ohio
