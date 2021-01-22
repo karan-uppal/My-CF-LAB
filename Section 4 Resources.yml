@@ -10,6 +10,7 @@ Resources:
       SecurityGroups:
         - !Ref MyFirstSG
   MyFirstSG:
+    GroupDescription: Opening ports 22 & 80
     Type: AWS::EC2::SecurityGroup
     Properties: 
       SecurityGroupIngress:
