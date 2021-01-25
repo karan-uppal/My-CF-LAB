@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+
+Mappings:
+  MyRegionMap:
+    us-east-2:
+      AMIId: ami-0a0ad6b70e61be944
+    us-east-1:
+      AMIId: ami-0be2609ba883822ec
+ 
+  Env:
+    dev:
+      InstanceType: t2.micro
+    prod:
+      InstanceType: t2.small
+
+Parameters:
+  MyKeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: choose key name
+  MyEnv:
+    Type: String
+    Description: choose instance type from the list
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+  MyAZ:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: choose A.Z from the list
+    
+
+Resources:
+  MyEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: !FindInMap
+        - MyRegionMap
+        - !Ref AWS::Region
+        - AMIId
+      InstanceType: !FindInMap 
+        - Env
+        - !Ref MyEnv
+        - InstanceType
+      KeyName: !Ref MyKeyName
+      SecurityGroups:
+        - !Ref MyFirstSG
+      AvailabilityZone: !Ref MyAZ
+  MyFirstSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: opening port 22 & 80
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          ToPort: 22
+          FromPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: 'tcp'
+          ToPort: 80
+          FromPort: 80
+          CidrIp: 0.0.0.0/0
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref MyEC2Instance
