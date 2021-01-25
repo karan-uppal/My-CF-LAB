@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+
+Parameters:
+  MyKeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: choose key name
+  MyInstanceType:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: choose instance type from the list
+    
+  MyAZ:
+    Type: String
+    Description: choose A.Z from the list
+    Default: us-east-2a
+    AllowedValues:
+      - us-east-2a
+      - us-east-2b
+      - us-east-2c
+
+Resources:
+  MyEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: "ami-0a0ad6b70e61be944"
+      InstanceType: !Ref MyInstanceType
+      KeyName: !Ref MyKeyName
+      SecurityGroups:
+        - !Ref MyFirstSG
+      AvailabilityZone: !Ref MyAZ
+  MyFirstSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: opening port 22 & 80
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          ToPort: 22
+          FromPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: 'tcp'
+          ToPort: 80
+          FromPort: 80
+          CidrIp: 0.0.0.0/0
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref MyEC2Instance
