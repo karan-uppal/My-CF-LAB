@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+
+Mappings:
+  MyRegionMap:
+    us-east-2:
+      AMIId: ami-0a0ad6b70e61be944
+    us-east-1:
+      AMIId: ami-0be2609ba883822ec
+ 
+  Env:
+    dev:
+      InstanceType: t2.micro
+    prod:
+      InstanceType: t2.small
+    qa:
+      InstanceType: t2.nano
+
+
+Parameters:
+  MyKP:
+    Type: AWS::EC2::KeyPair::KeyName  
+  MyEnv:
+    Type: String
+    Description: choose instance type from the list
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+      - qa
+  MyAZ:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: choose A.Z from the list
+    
+
+Resources:
+  MyEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: !FindInMap
+        - MyRegionMap
+        - !Ref AWS::Region
+        - AMIId
+      InstanceType: !FindInMap 
+        - Env
+        - !Ref MyEnv
+        - InstanceType
+      KeyName: !Ref MyKP
+      SecurityGroups: 
+        - !ImportValue DEVSecurityGroup
+      AvailabilityZone: !ImportValue ooo-InstanceAz
