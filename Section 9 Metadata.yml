@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+
+Mappings:
+  MyRegionMap:
+    us-east-2:
+      AMIId: ami-0a0ad6b70e61be944
+    us-east-1:
+      AMIId: ami-0be2609ba883822ec
+ 
+  Env:
+    dev:
+      InstanceType: t2.micro
+    prod:
+      InstanceType: t2.small
+    qa:
+      InstanceType: t2.nano
+
+Conditions:
+  ProdEIP: !Equals [!Ref MyEnv, prod]
+  DevSG: !Equals [!Ref MyEnv, dev]
+  ProdSG: !Not  [{Condition: DevSG}]
+  KeyPair: !And [!Or [!Equals [!Ref AWS::Region, us-east-1], !Equals [!Ref AWS::Region, us-east-2]], !Equals [!Ref MyEnv, dev]]
+
+
+Parameters:
+     
+  MyEnv:
+    Type: String
+    Description: choose instance type from the list
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+      - qa
+  MyAZ:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: choose A.Z from the list
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Ec2 instance config , bazingaaa!!"
+        Parameters:
+          - MyAZ
+      - Label:
+          default: "Environment config!!"
+        Parameters:
+          - MyEnv
+    ParameterLabels:
+      MyEnv:
+        default: "whats the type of evnironment you want to create?"
+    
+
+Resources:
+  MyEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: !FindInMap
+        - MyRegionMap
+        - !Ref AWS::Region
+        - AMIId
+      InstanceType: !FindInMap 
+        - Env
+        - !Ref MyEnv
+        - InstanceType
+      KeyName: !If [KeyPair, test, devops]
+      SecurityGroups:
+        - !If [DevSG,!Ref MyDevSG,!Ref MyProdSG]
+      AvailabilityZone: !Ref MyAZ
+  
+  MyDevSG:
+    Type: AWS::EC2::SecurityGroup
+    Condition: DevSG
+    Properties: 
+      GroupDescription: opening port 22 & 80
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          ToPort: 22
+          FromPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: 'tcp'
+          ToPort: 80
+          FromPort: 80
+          CidrIp: 0.0.0.0/0
+  
+  MyProdSG:
+    Type: AWS::EC2::SecurityGroup
+    Condition: ProdSG
+    Properties: 
+      GroupDescription: opening port 22 & 80
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          ToPort: 80
+          FromPort: 80
+          CidrIp: 0.0.0.0/0
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Condition: ProdEIP
+    Properties:
+      InstanceId: !Ref MyEC2Instance
+
+Outputs:
+  InstanceID:
+    Description: My Instance ID
+    Value: !Ref MyEC2Instance
+  AZId:
+    Description: AZ ID
+    Value: !GetAtt MyEC2Instance.AvailabilityZone
+    Export:
+      Name: !Sub "${AWS::StackName}-InstanceAz"
+  SGId:
+    Description: SG ID
+    Value: !Ref MyDevSG
+    Condition: DevSG
+    Export:
+      Name: !Join ["::::", [!Ref "AWS::StackName", MyDevSG]]
+
+  
