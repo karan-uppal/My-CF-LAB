@@ -97,8 +97,9 @@ Outputs:
       Name: !Sub "${AWS::StackName}-InstanceAz"
   SGId:
     Description: SG ID
-    Value: !If [DevSG,!Ref MyDevSG,!Ref MyProdSG]
+    Value: !Ref MyDevSG
+    Condition: DevSG
     Export:
-      Name: DEVSecurityGroup
+      Name: !Join ["::::", [!Ref "AWS::StackName", MyDevSG]]
 
   
